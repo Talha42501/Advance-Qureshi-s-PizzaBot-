@@ -37,7 +37,6 @@ PRICES = {
 
 def bot(msg):
     st.markdown(f"**🤖 PizzaBot:** {msg}")
-    
 st.sidebar.title("🛡️ Admin Portal")
 if "admin_logged_in" not in st.session_state:
     st.session_state.admin_logged_in = False
@@ -46,7 +45,7 @@ if not st.session_state.admin_logged_in:
     user_input = st.sidebar.text_input("Admin Username")
     pass_input = st.sidebar.text_input("Password", type="password")
     if st.sidebar.button("Login"):
-        if user_input == "admin" and pass_input == "pizza123":
+        if user_input == "Talha" and pass_input == "pizza123":
             st.session_state.admin_logged_in = True
             st.rerun()
         else:
@@ -65,7 +64,6 @@ else:
     if st.sidebar.button("Logout"):
         st.session_state.admin_logged_in = False
         st.rerun()
-
 st.title("🍕 Qureshi's PizzaBot")
 st.write(f"--- Session ID: **#{st.session_state.order_id}** ---")
 
@@ -79,7 +77,7 @@ if st.session_state.step == 0:
 if st.session_state.step == -1:
     bot("Thank you for visiting! Have a great day. 👋")
     if st.button("Restart"):
-        st.session_state.step = 0
+        st.session_state.clear()
         st.rerun()
 
 if st.session_state.step == 1:
@@ -112,7 +110,7 @@ if st.session_state.step == 4:
     cust_name = st.text_input("Full Name:") 
     addr = st.text_area("Delivery Address:")
     drnk = st.selectbox("Drink:", ["None", "Coke", "Sprite", "Water"])
-    tops = st.multiselect("Toppings:", ["Pepperoni", "Mushrooms", "Olives", "Jalapenos"])
+    tops = st.multiselect("Extra Toppings (Rs. 50 each):", ["Pepperoni", "Mushrooms", "Olives", "Jalapenos"])
     
     if st.button("Finish Order"):
         if not cust_name or not addr:
@@ -127,17 +125,24 @@ if st.session_state.step == 4:
 if st.session_state.step == 5:
     o = st.session_state.order
     base_p = PRICES["Size"][o["size"]]
-    crust_p = PRICES["Crust"][o["crusts"][0]] 
-    total = ((base_p + crust_p + (len(o["toppings"])*50)) * o["qty"]) + PRICES["Drink"][o["drink"]]
     
+    crust_p = PRICES["Crust"][o["crusts"][0]] if o["crusts"] else 0
+    topping_total = len(o["toppings"]) * 50
+    drink_p = PRICES["Drink"][o["drink"]]
+    
+    total = ((base_p + crust_p + topping_total) * o["qty"]) + drink_p
     final_data = {
         "OrderID": st.session_state.order_id,
         "Customer_Name": o["name_user"],
         "Customer_Address": o["address"],
         "Pizzas": ", ".join(o["names"]),
-        "Qty": o["qty"],
-        "Bill": f"Rs. {total}",
-        "Time": time.strftime("%Y-%m-%d %H:%M:%S")
+        "Quantity": o["qty"],
+        "Size": o["size"],
+        "Crusts": ", ".join(o["crusts"]),
+        "Toppings": ", ".join(o["toppings"]) if o["toppings"] else "None",
+        "Cold Drink": o["drink"],
+        "Total Bill": f"Rs. {total}",
+        "Date_Time": time.strftime("%Y-%m-%d %H:%M:%S")
     }
 
     if "saved" not in st.session_state:
@@ -145,10 +150,13 @@ if st.session_state.step == 5:
         st.session_state.saved = True
 
     st.success(f"🎉 🎉 Order Confirmed! ID: #{st.session_state.order_id}")
-    st.table(pd.DataFrame([final_data]).T.rename(columns={0: "Details"}))
+    
+    st.table(pd.DataFrame([final_data]).T.rename(columns={0: "Order Summary"}))
     
     with st.status("Processing your order...") as s:
-        time.sleep(3)
+        time.sleep(2)
+        st.write("Baking your Pizza... 🔥")
+        time.sleep(2)
         s.update(label="Delivered! Enjoy your meal 😋", state="complete")
 
     if st.button("Place New Order"):
