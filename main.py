@@ -65,7 +65,6 @@ else:
         st.session_state.admin_logged_in = False
         st.rerun()
 st.title("🍕 Qureshi's PizzaBot")
-st.write(f"--- Session ID: **#{st.session_state.order_id}** ---")
 
 if st.session_state.step == 0:
     bot("Welcome! Would you like to place an order today?")
@@ -162,3 +161,4 @@ if st.session_state.step == 5:
     if st.button("Place New Order"):
         st.session_state.clear()
         st.rerun()
+        
